@@ -1,0 +1,27 @@
+[
+  {
+    "name": "LangChain",
+    "repo": "langchain-ai/langchain",
+    "category": "LLM Framework"
+  },
+  {
+    "name": "LlamaIndex",
+    "repo": "run-llama/llama_index",
+    "category": "RAG & Data"
+  },
+  {
+    "name": "HuggingFace Transformers",
+    "repo": "huggingface/transformers",
+    "category": "Models Library"
+  },
+  {
+    "name": "FastAPI",
+    "repo": "fastapi/fastapi",
+    "category": "Backend API"
+  },
+  {
+    "name": "Gradio",
+    "repo": "gradio-app/gradio",
+    "category": "UI Demos"
+  }
+]
