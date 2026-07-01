@@ -56,6 +56,27 @@ def scrape_huggingface():
                         "title": m["modelId"],
                         "description": f"نموذج {m.get('pipeline_tag', 'AI')} بمجال الذكاء الاصطناعي.",
                         "url": "https://huggingface.co/" + m["modelId"],
+def scrape_huggingface():
+    items = []
+    try:
+        logger.info("Searching for models on HuggingFace...")
+        url = "https://huggingface.co/api/models"
+        params = {
+            "sort": "downloads",
+            "direction": "-1",
+            "limit": "3",
+            "search": "llm OR vision"
+        }
+        r = requests.get(url, params=params, timeout=15)
+        
+        if r.status_code == 200:
+            data = r.json()
+            for m in data[:3]:
+                if "gated" not in m.get("tags", []):
+                    items.append({
+                        "title": m["modelId"],
+                        "description": f"نموذج {m.get('pipeline_tag', 'AI')} بمجال الذكاء الاصطناعي.",
+                        "url": "https://huggingface.co/" + m["modelId"],
                         "source": "HuggingFace",
                         "downloads": m.get("downloads", 0),
                         "is_free": True,
