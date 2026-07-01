@@ -7,7 +7,6 @@ def scrape_github():
     items = []
     try:
         logger.info("Fetching GitHub AI tools...")
-        # معايير بسيطة ومضمونة
         url = "https://api.github.com/search/repositories"
         params = {
             "q": "artificial intelligence stars:>100",
