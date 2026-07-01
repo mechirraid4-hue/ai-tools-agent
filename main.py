@@ -6,63 +6,58 @@ from scraper import scrape_all_sources
 from summarizer import summarize_news
 from notifier import send_to_telegram
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def load_sent_news():
-    try:
-        with open('sent_news.json', 'r') as f:
-            return json.load(f)
-    except:
-        return {}
-
-def save_sent_news(sent_data):
-    with open('sent_news.json', 'w') as f:
-        json.dump(sent_data, f, indent=2)
-
 def main():
-    logger.info("🚀 Starting AI Tools Agent...")
+    logger.info("🚀 STARTING AGENT...")
     
-    news_items = scrape_all_sources()
-    logger.info(f"📰 Found {len(news_items)} tools")
+    # تحقق من المتغيرات
+    if not os.environ.get('GROQ_API_KEY'):
+        logger.error("❌ GROQ_API_KEY MISSING!")
+    else:
+        logger.info("✅ GROQ_API_KEY found")
+        
+    if not os.environ.get('TELEGRAM_BOT_TOKEN'):
+        logger.error("❌ TELEGRAM_BOT_TOKEN MISSING!")
     
-    if not news_items:
-        logger.warning("⚠️ No tools found. Exiting.")
+    # جلب الأدوات
+    items = scrape_all_sources()
+    logger.info(f"📰 Found {len(items)} items")
+    
+    if not items:
+        logger.error("❌ NO ITEMS FOUND!")
         return
     
-    sent_news = load_sent_news()
+    sent = {}
+    try:
+        with open('sent_news.json', 'r') as f:
+            sent = json.load(f)
+    except:
+        pass
     
-    sent_count = 0
-    for item in news_items:
+    count = 0
+    for item in items:
         url = item.get('url', '')
-        
-        if url in sent_news:
-            logger.info(f"⏭️ Already sent: {item.get('title', '')}")
+        if url in sent:
+            logger.info(f"⏭️ Already sent: {item.get('title')}")
             continue
+            
+        logger.info(f"🔄 SUMMARIZING: {item.get('title')}")
+        summary = summarize_news(item)
         
-        logger.info(f"🔄 Processing: {item.get('title', '')}")
-        
-        summary_data = summarize_news(item)
-        
-        success = send_to_telegram(summary_data)
-        
-        if success:
-            sent_news[url] = {
-                'title': item.get('title', ''),
-                'sent_at': datetime.now().isoformat(),
-                'source': item.get('source', '')
-            }
-            sent_count += 1
-            logger.info(f"✅ Sent: {item.get('title', '')}")
+        logger.info(f"📤 SENDING TO TELEGRAM...")
+        if send_to_telegram(summary):
+            sent[url] = {'sent_at': datetime.now().isoformat()}
+            count += 1
+            logger.info(f"✅ SENT!")
         else:
-            logger.error(f"❌ Failed to send: {item.get('title', '')}")
+            logger.error("❌ SEND FAILED!")
     
-    save_sent_news(sent_news)
+    with open('sent_news.json', 'w') as f:
+        json.dump(sent, f)
     
-    logger.info(f"🎉 Total sent: {sent_count}")
+    logger.info(f"🎉 DONE: {count} sent")
 
 if __name__ == "__main__":
     main()
