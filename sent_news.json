@@ -18,8 +18,13 @@
     "https://huggingface.co/liangwc25/lora-lora10",
     "https://huggingface.co/WendyHui/food-waste-llama3-merged",
     "https://huggingface.co/sundaycoil/note-taking-app",
-    "https://huggingface.co/ParallaxFx343/pickle-scanner-bypass-marshal-poc"
+    "https://huggingface.co/ParallaxFx343/pickle-scanner-bypass-marshal-poc",
+    "https://github.com/obra/superpowers",
+    "https://github.com/NousResearch/hermes-agent",
+    "https://github.com/langflow-ai/langflow",
+    "https://huggingface.co/wepiqx/ASHQ1",
+    "https://huggingface.co/KissTheHabit/IDA_AI"
   ],
-  "last_run": "2026-07-01T01:05:20.565899",
-  "total_sent": 19
+  "last_run": "2026-07-01T07:44:45.517799",
+  "total_sent": 24
 }
