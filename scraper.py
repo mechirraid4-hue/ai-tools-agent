@@ -1,24 +1,22 @@
 import requests
 import feedparser
 import logging
-from datetime import datetime, timedelta
-from bs4 import BeautifulSoup
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 def scrape_github_trending():
-    """Scrape trending FREE AI repositories from GitHub"""
     news_items = []
     
     try:
-        logger.info("🔍 Scraping GitHub Trending (FREE tools only)...")
+        logger.info("Scraping GitHub Trending")
         
         url = "https://api.github.com/search/repositories"
         params = {
-            'q': 'artificial intelligence OR machine learning OR deep learning OR neural-network OR ai-tools license:mit OR license:apache-2.0 OR license:bsd-3-clause OR license:gpl-3.0',
+            'q': 'artificial intelligence license:mit',
             'sort': 'stars',
             'order': 'desc',
-            'per_page': 15
+            'per_page': 10
         }
         
         response = requests.get(url, params=params, timeout=10)
@@ -26,15 +24,108 @@ def scrape_github_trending():
         
         data = response.json()
         
-        for repo in data.get('items', [])[:8]:
-            license_info = repo.get('license', {})
-            license_key = license_info.get('key', '') if license_info else ''
-            license_name = license_info.get('name', 'Open Source') if license_info else 'Open Source'
-            
+        for repo in data.get('items', [])[:5]:
             if not repo.get('description'):
                 continue
+            
+            news_items.append({
+                'title': repo['full_name'],
+                'description': repo['description'],
+                'url': repo['html_url'],
+                'source': 'GitHub',
+                'published': repo['created_at'],
+                'stars': repo['stargazers_count'],
+                'is_free': True
+            })
+        
+        logger.info("Found " + str(len(news_items)) + " items from GitHub")
+        
+    except Exception as e:
+        logger.error("Error scraping GitHub: " + str(e))
+    
+    return news_items
+
+def scrape_huggingface():
+    news_items = []
+    
+    try:
+        logger.info("Scraping Hugging Face")
+        
+        url = "https://huggingface.co/api/models"
+        params = {
+            'sort': 'lastModified',
+            'direction': '-1',
+            'limit': 5
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        for model in data[:5]:
+            news_items.append({
+                'title': model['modelId'],
+                'description': "Free AI model",
+                'url': "https://huggingface.co/" + model['modelId'],
+                'source': 'Hugging Face',
+                'published': model.get('lastModified', ''),
+                'is_free': True
+            })
+        
+        logger.info("Found " + str(len(news_items)) + " items from Hugging Face")
+        
+    except Exception as e:
+        logger.error("Error scraping Hugging Face: " + str(e))
+    
+    return news_items
+
+def scrape_rss_feeds():
+    news_items = []
+    
+    try:
+        logger.info("Scraping RSS feeds")
+        
+        feeds = [
+            'https://openai.com/blog/rss.xml',
+            'https://huggingface.co/blog/feed.xml'
+        ]
+        
+        for feed_url in feeds:
+            try:
+                feed = feedparser.parse(feed_url)
                 
-            free_licenses = ['mit', 'apache-2.0', 'bsd-3-clause', 'bsd-2-clause', 'gpl-3.0', 'lgpl-3.0', 'unlicense', 'wtfpl']
+                for entry in feed.entries[:2]:
+                    news_items.append({
+                        'title': entry.title,
+                        'description': entry.get('summary', '')[:200],
+                        'url': entry.link,
+                        'source': 'RSS Feed',
+                        'published': entry.get('published', ''),
+                        'is_free': True
+                    })
+            except Exception as e:
+                logger.warning("Error parsing feed: " + str(e))
+        
+        logger.info("Found " + str(len(news_items)) + " items from RSS")
+        
+    except Exception as e:
+        logger.error("Error scraping RSS: " + str(e))
+    
+    return news_items
+
+def scrape_all_sources():
+    logger.info("Starting to scrape all sources")
+    
+    all_news = []
+    
+    all_news.extend(scrape_github_trending())
+    all_news.extend(scrape_huggingface())
+    all_news.extend(scrape_rss_feeds())
+    
+    logger.info("Total news items found: " + str(len(all_news)))
+    
+    return all_news            free_licenses = ['mit', 'apache-2.0', 'bsd-3-clause', 'bsd-2-clause', 'gpl-3.0', 'lgpl-3.0', 'unlicense', 'wtfpl']
             
             if license_key in free_licenses or not license_key:
                 news_items.append({
