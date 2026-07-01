@@ -4,180 +4,125 @@ from datetime import datetime, timezone, timedelta
 
 logger = logging.getLogger(__name__)
 
-def scrape_releases():
-    """جلب أحدث تحديثات للأدوات المهمة في قائمة المراقبة"""
+def scrape_github_trending():
+    """جلب أدوات GitHub الرائدة حديثاً (مرونة عالية)"""
     items = []
     try:
-        logger.info("Checking watchlist for new releases...")
-        
-        # قراءة قائمة المراقبة مباشرة من المستودع
-        watchlist_url = "https://raw.githubusercontent.com/mechirraid4-hue/ai-tools-agent/main/watchlist.json"
-        watchlist = requests.get(watchlist_url, timeout=10).json()
-        
-        for tool in watchlist:
-            repo_path = tool["repo"]
-            url = f"https://api.github.com/repos/{repo_path}/releases/latest"
-            r = requests.get(url, timeout=10)
-            
-            if r.status_code == 200:
-                release = r.json()
-                # التحقق من أن التحديث صدر خلال آخر 72 ساعة
-                release_date = datetime.fromisoformat(release['published_at'].replace('Z', '+00:00'))
-                if (datetime.now(timezone.utc) - release_date) < timedelta(hours=72):
-                    items.append({
-                        "title": f"تحديث جديد لـ {tool['name']} ({release['tag_name']})",
-                        "description": release.get('body', 'لا يوجد وصف للتغييرات')[:800],
-                        "url": release['html_url'],
-                        "source": f"Release Watcher ({tool['category']})",
-                        "is_free": True,
-                        "quality_score": 9000,
-                        "type": "update"
-                    })
-        logger.info(f"Found {len(items)} recent updates.")
-    except Exception as e:
-        logger.error(f"Releases Error: {str(e)}")
-    return items
-
-def scrape_trending_llms():
-    """جلب معلومات عن النماذج الشهيرة مثل Kimi و MiniMax"""
-    items = []
-    try:
-        logger.info("Checking famous LLMs repositories...")
-        famous_models = [
-            "MoonshotAI/Kimi-k1", 
-            "MiniMaxAI/MiniMax-01", 
-            "Qwen/Qwen2.5", 
-            "meta-llama/Llama-3",
-            "deepseek-ai/DeepSeek-V3"
-        ]
-        
-        for model_repo in famous_models:
-            url = f"https://api.github.com/repos/{model_repo}"
-            r = requests.get(url, timeout=10)
-            
-            if r.status_code == 200:
-                repo = r.json()
-                items.append({
-                    "title": repo["full_name"],
-                    "description": repo["description"] or "نموذج لغوي كبير وقوي",
-                    "url": repo["html_url"],
-                    "source": "Famous LLMs",
-                    "stars": repo["stargazers_count"],
-                    "is_free": True,
-                    "quality_score": 8500
-                })
-    except Exception as e:
-        logger.error(f"Famous LLMs Error: {str(e)}")
-    return items
-
-def scrape_design_tools():
-    """جلب أدوات تصميم الواجهات والمواقع المدعومة بالذكاء الاصطناعي"""
-    items = []
-    try:
-        logger.info("Searching for AI Design & UI tools...")
-        design_queries = ["ai-ui-generator", "figma-plugin-ai", "website-builder-ai"]
-        
-        for query in design_queries[:2]:
-            url = "https://api.github.com/search/repositories"
-            params = {
-                "q": f"{query} stars:>50 language:typescript OR language:javascript",
-                "sort": "stars",
-                "order": "desc",
-                "per_page": "2"
-            }
-            r = requests.get(url, params=params, timeout=10)
-            
-            if r.status_code == 200:
-                for repo in r.json().get("items", [])[:2]:
-                    items.append({
-                        "title": repo["full_name"],
-                        "description": repo["description"] or "أداة تصميم واجهات مدعومة بالذكاء الاصطناعي",
-                        "url": repo["html_url"],
-                        "source": "AI Design Tools",
-                        "stars": repo["stargazers_count"],
-                        "is_free": True,
-                        "quality_score": repo["stargazers_count"] + 500
-                    })
-    except Exception as e:
-        logger.error(f"Design Tools Error: {str(e)}")
-    return items
-
-def scrape_github():
-    """جلب أدوات GitHub الحديثة والقوية"""
-    items = []
-    try:
-        logger.info("Searching for Trending AI tools on GitHub...")
+        logger.info("Searching GitHub for rising AI tools...")
+        # معايير مرنة: تركيز على التحديث الأخير والنشاط بدلاً من النجوم فقط
         url = "https://api.github.com/search/repositories"
         params = {
-            "q": "artificial intelligence OR machine learning license:mit OR license:apache-2.0 stars:>100",
+            "q": "topic:artificial-intelligence OR topic:llm OR topic:rag pushed:>2024-06-01",
             "sort": "updated",
             "order": "desc",
-            "per_page": "3"
+            "per_page": "8"
         }
         r = requests.get(url, params=params, timeout=15)
         
         if r.status_code == 200:
-            data = r.json()
-            for repo in data.get("items", [])[:3]:
-                if repo.get("description"):
-                    items.append({
-                        "title": repo["full_name"],
-                        "description": repo["description"],
-                        "url": repo["html_url"],
-                        "source": "GitHub Trending",
-                        "stars": repo["stargazers_count"],
-                        "is_free": True,
-                        "quality_score": repo["stargazers_count"]
-                    })
+            for repo in r.json().get("items", [])[:8]:
+                # قبول أي أداة لها وصف واضح ونشاط حديث
+                if repo.get("description") and repo.get("pushed_at"):
+                    # حساب تاريخ آخر تحديث
+                    last_push = datetime.fromisoformat(repo['pushed_at'].replace('Z', '+00:00'))
+                    if (datetime.now(timezone.utc) - last_push) < timedelta(days=14):
+                        items.append({
+                            "title": repo["full_name"],
+                            "description": repo["description"],
+                            "url": repo["html_url"],
+                            "source": "GitHub Rising",
+                            "stars": repo["stargazers_count"],
+                            "is_free": True,
+                            "quality_score": repo["stargazers_count"] + 500  # دفعة للنشاط الحديث
+                        })
+        logger.info(f"Found {len(items)} rising GitHub tools.")
     except Exception as e:
-        logger.error(f"GitHub Error: {str(e)}")
+        logger.error(f"GitHub Trending Error: {str(e)}")
     return items
 
-def scrape_huggingface():
-    """جلب نماذج Hugging Face الحديثة"""
+def scrape_huggingface_trending():
+    """جلب نماذج HuggingFace الصاعدة"""
     items = []
     try:
-        logger.info("Searching for recent HF models...")
+        logger.info("Searching HuggingFace for trending models...")
         url = "https://huggingface.co/api/models"
         params = {
-            "sort": "lastModified",
+            "sort": "likes",  # التركيز على الإعجابات الحديثة
             "direction": "-1",
-            "limit": "5",
-            "search": "llm OR vision OR audio"
+            "limit": "6",
+            "search": "llm OR vision OR agent"
         }
         r = requests.get(url, params=params, timeout=15)
         
         if r.status_code == 200:
-            data = r.json()
-            count = 0
-            for m in data:
-                if count >= 3: break
+            for m in r.json()[:6]:
                 if "gated" not in m.get("tags", []):
                     items.append({
                         "title": m["modelId"],
-                        "description": f"نموذج {m.get('pipeline_tag', 'AI')} مجاني ومحدث.",
+                        "description": f"نموذج {m.get('pipeline_tag', 'AI')} صاعد بسرعة.",
                         "url": "https://huggingface.co/" + m["modelId"],
-                        "source": "HuggingFace Recent",
+                        "source": "HuggingFace Trending",
                         "downloads": m.get("downloads", 0),
                         "is_free": True,
-                        "quality_score": m.get("downloads", 0)
+                        "quality_score": m.get("likes", 0) * 10
                     })
-                    count += 1
+        logger.info(f"Found {len(items)} trending HF models.")
     except Exception as e:
-        logger.error(f"HF Error: {str(e)}")
+        logger.error(f"HF Trending Error: {str(e)}")
+    return items
+
+def scrape_producthunt_ai():
+    """جلب أدوات الذكاء الاصطناعي من ProductHunt (أدوات غير GitHub)"""
+    items = []
+    try:
+        logger.info("Checking ProductHunt AI tools...")
+        # RSS عام لـ ProductHunt مع فلتر AI يدوي لاحقاً
+        feed_url = "https://www.producthunt.com/feed"
+        r = requests.get(feed_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+        
+        if r.status_code == 200:
+            # تحليل بسيط لـ XML (بدون مكتبات ثقيلة)
+            import xml.etree.ElementTree as ET
+            root = ET.fromstring(r.content)
+            for item in root.findall(".//item")[:5]:
+                title = item.find("title").text
+                desc = item.find("description").text
+                link = item.find("link").text
+                # فلتر سريع: نأخذ فقط ما يحتوي على AI أو Tool أو App
+                if any(kw in title.lower() for kw in ["ai", "tool", "app", "agent", "llm"]):
+                    items.append({
+                        "title": title,
+                        "description": desc[:300],
+                        "url": link,
+                        "source": "ProductHunt AI",
+                        "is_free": True,
+                        "quality_score": 700  # أولوية متوسطة للأدوات الجديدة
+                    })
+        logger.info(f"Found {len(items)} ProductHunt AI tools.")
+    except Exception as e:
+        logger.error(f"ProductHunt Error: {str(e)}")
     return items
 
 def scrape_all_sources():
     all_news = []
-    # الترتيب حسب الأهمية للمطور المحترف
-    all_news.extend(scrape_releases())       # 1. التحديثات الحديثة (الأهم)
-    all_news.extend(scrape_trending_llms())  # 2. النماذج الشهيرة
-    all_news.extend(scrape_design_tools())   # 3. أدوات التصميم
-    all_news.extend(scrape_github())         # 4. أدوات GitHub العامة
-    all_news.extend(scrape_huggingface())    # 5. نماذج HuggingFace
+    # دمج المصادر المتنوعة
+    all_news.extend(scrape_producthunt_ai())   # أدوات جديدة غير GitHub
+    all_news.extend(scrape_github_trending())  # مستودعات صاعدة
+    all_news.extend(scrape_huggingface_trending()) # نماذج رائجة
     
+    # ترتيب حسب الجودة مع تنويع المصادر
     all_news.sort(key=lambda x: x.get("quality_score", 0), reverse=True)
-    final_items = all_news[:6] 
     
-    logger.info(f"Selected {len(final_items)} professional tools & updates.")
+    # أخذ أفضل 5 أدوات من مصادر مختلفة
+    final_items = []
+    seen_sources = set()
+    for item in all_news:
+        src = item.get("source", "")
+        if src not in seen_sources or len(final_items) < 5:
+            final_items.append(item)
+            seen_sources.add(src)
+        if len(final_items) >= 5:
+            break
+            
+    logger.info(f"Selected {len(final_items)} diverse trending tools.")
     return final_items
