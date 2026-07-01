@@ -5,36 +5,46 @@ import requests
 logger = logging.getLogger(__name__)
 
 def send_to_telegram(summary):
-    """Send summarized news to Telegram"""
-    
     try:
-        # Get Telegram credentials from environment
         bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
         chat_id = os.environ.get('TELEGRAM_CHAT_ID')
         
         if not bot_token or not chat_id:
-            raise ValueError("Telegram credentials not found in environment variables")
+            raise ValueError("Telegram creds missing")
         
-        # Format the message
-        title = summary.get('title', 'بدون عنوان')
+        title = summary.get('title', 'أداة جديدة')
         url = summary.get('url', '')
-        source = summary.get('source', 'مصدر غير معروف')
-        summary_text = summary.get('summary', '')
+        source = summary.get('source', '')
+        text = summary.get('summary', '')
         
-        # Create formatted message
-        message = f"""🤖 <b>أداة ذكاء اصطناعي جديدة</b>
+        # تنسيق الرسالة مع إيموجي واضح
+        message = f"""🤖 <b>أداة ذكاء اصطناعي قوية</b>
 
 📌 <b>{title}</b>
 
-📝 {summary_text}
+{text}
 
-🔗 <a href="{url}">رابط الأداة</a>
+ <a href="{url}">رابط الأداة الرسمي</a>
+📍 المصدر: {source}
 
-📍 المصدر: {source}"""
+━━━━━━━━━━━━━━━━━━━━
+✅ مجانية 100% - مختارة بعناية"""
+
+        payload = {
+            'chat_id': chat_id,
+            'text': message,
+            'parse_mode': 'HTML',
+            'disable_web_page_preview': False
+        }
         
-        # Send to Telegram
-        telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        r = requests.post(f"https://api.telegram.org/bot{bot_token}/sendMessage", json=payload, timeout=10)
+        r.raise_for_status()
+        logger.info(f"Sent: {title[:30]}")
+        return True
         
+    except Exception as e:
+        logger.error(f"Telegram Error: {str(e)}")
+        return False        
         payload = {
             'chat_id': chat_id,
             'text': message,
