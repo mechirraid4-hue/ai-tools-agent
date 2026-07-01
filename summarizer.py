@@ -8,33 +8,69 @@ def summarize_news(news_item):
     try:
         api_key = os.environ.get('GROQ_API_KEY')
         if not api_key:
-            raise ValueError("GROQ_API_KEY not found")
+            raise ValueError("GROQ_API_KEY missing")
         
         client = Groq(api_key=api_key)
         
         title = news_item.get('title', '')
-        description = news_item.get('description', '')
+        desc = news_item.get('description', '')
         source = news_item.get('source', '')
         url = news_item.get('url', '')
         stars = news_item.get('stars', '')
         downloads = news_item.get('downloads', '')
-        license_info = news_item.get('license', '')
         
-        prompt = """أنت خبير تقني متخصص في تقييم أدوات الذكاء الاصطناعي المفتوحة المصدر والمجانية.
+        # بناء برومبت دقيق يركز على القوة والفائدة العملية
+        prompt = f"""أنت خبير تقني صارم ودقيق في تقييم أدوات الذكاء الاصطناعي.
+قم بتحليل الأداة التالية وتقديم تقرير شامل بالعربية الفصحى:
 
-مهمتك: تحليل دقيق وشامل للأداة التالية وتقديم تقرير احترافي بالعربية.
+🔹 المعلومات:
+- الاسم: {title}
+- المصدر: {source}
+- الوصف: {desc}
+{"- النجوم: " + str(stars) if stars else ""}
+{"- التحميلات: " + str(downloads) if downloads else ""}
 
-معلومات الأداة:
-- العنوان: """ + title + """
-- المصدر: """ + source + """
-- الوصف: """ + description + """
-""" + (" - النجوم: " + str(stars) if stars else "") + """
-""" + (" - التنزيلات: " + str(downloads) if downloads else "") + """
-""" + (" - الترخيص: " + str(license_info) if license_info else "") + """
+📝 المطلوب منك (بالعربية):
 
-قدّم التقرير التالي بدقة وواقعية:
+1. ⭐ التقييم العام (من 5 نجوم): كن واقعياً ولا تبالغ.
+2. 🏢 الجهة المطورة والمصداقية: من يقف خلفها؟ وهل هي موثوقة؟
+3. 🎯 لمن هذه الأداة؟ (مطورون، باحثون، شركات...)
+4.  الفائدة لمطور AI: كيف يمكنني استخدامها عملياً في مشروعي؟ (أمثلة محددة)
+5. 🛠️ دليل الاستخدام السريع: خطوات عملية للبدء مجاناً.
+6. ⚖️ نقاط القوة والضعف: كن صادقاً بشأن القيود.
+7. ✅ الحكم النهائي: هل تستحق التجربة أم لا؟ ولماذا؟
 
-⭐ **التقييم العام:** (من 5 نجوم مع تبرير مختصر)
+️ ملاحظة هامة: ركز فقط على الجوانب التقنية والعملية. تجنب الكلام الإنشائي."""
+
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": "أنت محلل تقني محايد. تقييماتك دقيقة وواقعية. تفضل الأدوات القوية والمثبتة."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.4, # درجة حرارة منخفضة لدقة أعلى
+            max_tokens=1000
+        )
+        
+        summary_text = completion.choices[0].message.content
+        
+        return {
+            'title': title,
+            'url': url,
+            'source': source,
+            'summary': summary_text,
+            'is_free': True
+        }
+        
+    except Exception as e:
+        logger.error(f"Summarizer Error: {str(e)}")
+        return {
+            'title': news_item.get('title', ''),
+            'url': news_item.get('url', ''),
+            'source': news_item.get('source', ''),
+            'summary': news_item.get('description', ''),
+            'is_free': True
+        }⭐ **التقييم العام:** (من 5 نجوم مع تبرير مختصر)
 
 🏢 **الجهة المطورة:**
 (من طوّر هذه الأداة؟ شركة كبرى؟ منظمة بحثية؟ مطور مستقل؟ مجتمع مفتوح المصدر؟ ما مصداقيتها؟)
