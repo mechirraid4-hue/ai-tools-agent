@@ -1,0 +1,9 @@
+{
+  "sent_urls": [
+    "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2",
+    "https://huggingface.co/cross-encoder/ms-marco-MiniLM-L6-v2",
+    "https://huggingface.co/BAAI/bge-small-en-v1.5"
+  ],
+  "last_run": "2026-07-01T10:06:12.042755",
+  "total_sent": 3
+}
