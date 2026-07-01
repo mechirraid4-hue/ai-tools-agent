@@ -19,7 +19,8 @@ def summarize_news(news_item):
         stars = news_item.get('stars', '')
         downloads = news_item.get('downloads', '')
         
-        prompt = (
+        # بناء البرومبت بدقة وبدون إيموجي لتجنب أخطاء البناء
+        prompt_text = (
             "You are a strict technical expert in AI tools. Analyze this tool and provide a comprehensive report in Arabic:\n\n"
             "Tool Info:\n"
             "- Name: " + title + "\n"
@@ -45,7 +46,7 @@ def summarize_news(news_item):
             model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": "You are a neutral technical analyst. Provide accurate, realistic evaluations in clear Arabic."},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt_text}
             ],
             temperature=0.5,
             max_tokens=1200
@@ -63,6 +64,7 @@ def summarize_news(news_item):
         
     except Exception as e:
         logger.error(f"Summarizer Error: {str(e)}")
+        # في حالة الخطأ، نعيد الوصف الأصلي حتى لا تظهر الرسالة فارغة
         return {
             'title': news_item.get('title', ''),
             'url': news_item.get('url', ''),
