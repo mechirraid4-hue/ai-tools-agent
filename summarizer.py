@@ -60,4 +60,30 @@ def summarize_news(news_item):
             'summary': news_item.get('description', ''),
             'original_description': news_item.get('description', ''),
             'is_free': True
+        }              {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=600
+        )
+        
+        summary_text = completion.choices[0].message.content
+        
+        return {
+            'title': title,
+            'url': url,
+            'source': source,
+            'summary': summary_text,
+            'original_description': description,
+            'is_free': True
+        }
+        
+    except Exception as e:
+        logger.error("Error summarizing: " + str(e))
+        return {
+            'title': news_item.get('title', ''),
+            'url': news_item.get('url', ''),
+            'source': news_item.get('source', ''),
+            'summary': news_item.get('description', ''),
+            'original_description': news_item.get('description', ''),
+            'is_free': True
         }
