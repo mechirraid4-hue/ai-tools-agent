@@ -4,8 +4,10 @@
     "https://huggingface.co/cross-encoder/ms-marco-MiniLM-L6-v2",
     "https://huggingface.co/BAAI/bge-small-en-v1.5",
     "https://openai.com/index/how-chatgpt-adoption-has-expanded",
-    "https://blog.google/company-news/inside-google/around-the-globe/google-europe/united-kingdom/unlocking-britains-next-era-of-productivity-building-a-nation-of-ai-trailblazers/"
+    "https://blog.google/company-news/inside-google/around-the-globe/google-europe/united-kingdom/unlocking-britains-next-era-of-productivity-building-a-nation-of-ai-trailblazers/",
+    "https://github.com/fastapi/fastapi/releases/tag/0.138.2",
+    "https://github.com/deepseek-ai/DeepSeek-V3"
   ],
-  "last_run": "2026-07-01T10:14:44.617214",
-  "total_sent": 5
+  "last_run": "2026-07-01T10:49:05.270960",
+  "total_sent": 7
 }
