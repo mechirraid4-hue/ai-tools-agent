@@ -1,11 +1,11 @@
-import os
+ import os
 import logging
 from groq import Groq
 
 logger = logging.getLogger(__name__)
 
 def summarize_news(news_item):
-    """Summarize news item using Groq AI in Arabic"""
+    """Summarize FREE AI tool with detailed Arabic description focusing on features"""
     
     try:
         # Initialize Groq client
@@ -20,21 +20,102 @@ def summarize_news(news_item):
         description = news_item.get('description', '')
         source = news_item.get('source', '')
         url = news_item.get('url', '')
+        stars = news_item.get('stars', '')
+        forks = news_item.get('forks', '')
+        downloads = news_item.get('downloads', '')
+        likes = news_item.get('likes', '')
+        license_info = news_item.get('license', 'مفتوح المصدر')
         
-        prompt = f"""أنت خبير في تحليل أخبار الذكاء الاصطناعي. قم بتلخيص الخبر التالي بالعربية بشكل احترافي ومختصر.
+        prompt = f"""أنت خبير تقني متخصص في أدوات الذكاء الاصطناعي المجانية والمفتوحة المصدر. قدّم تحليلاً دقيقاً وشاملاً بالعربية للأداة التالية:
 
-المصدر: {source}
-العنوان: {title}
-الوصف: {description}
+🔹 **المعلومات الأساسية:**
+- المصدر: {source}
+- العنوان: {title}
+- الترخيص: {license_info}
+- الوصف الأصلي: {description}
+{"- ⭐ عدد النجوم: " + str(stars) if stars else ""}
+{"- 🔀 عدد forks: " + str(forks) if forks else ""}
+{"- 📥 عدد التنزيلات: " + str(downloads) if downloads else ""}
+{"- ❤️ عدد الإعجابات: " + str(likes) if likes else ""}
 
-المطلوب:
-1. عنوان جذاب بالعربية (سطر واحد)
-2. ملخص مختصر (2-3 جمل)
-3. لماذا هذا الخبر مهم؟ (جملة واحدة)
+🎯 **المطلوب (بالعربية الفصحى الواضحة):**
 
-أجب بتنسيق واضح ومنظم."""
+**1. العنوان الرئيسي:** (عنوان جذاب ومختصر يعكس جوهر الأداة)
 
-        # Call Groq API
+**2. ما هي هذه الأداة؟**
+(2-3 جمل تشرح بوضوح: ما هي؟ ماذا تفعل؟ لمن موجهة؟)
+
+**3. المزايا والخصائص الرئيسية:**
+(اذكر 3-5 مزايا محددة وواضحة، ركّز على:
+- ما الذي يميزها عن غيرها؟
+- ما التقنيات المستخدمة؟
+- ما المشكلات التي تحلها؟
+- هل سهلة الاستخدام؟)
+
+**4. حالات الاستخدام:**
+(أمثلة عملية: متى ولماذا تستخدم هذه الأداة؟)
+
+**5. لماذا مهمة؟**
+(جملة واحدة توضح القيمة المضافة والأهمية)
+
+**6. متطلبات الاستخدام:**
+(سطر واحد: هل تحتاج خبرة؟ هل تتطلب دفع؟ إلخ)
+
+⚠️ **ملاحظات مهمة:**
+- كن دقيقاً وواقعياً
+- تجنب المبالغة
+- ركّز على الجوانب العملية
+- استخدم لغة عربية فصحى واضحة
+- تأكد من أن الوصف مناسب للمبتدئين والمحترفين"""
+
+        # Call Groq API with enhanced settings
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": "أنت خبير تقني في الذكاء الاصطناعي والأدوات المفتوحة المصدر. قدّم أوصافاً دقيقة وشاملة بالعربية الفصحى، مع التركيز على المزايا العملية والاستخدامات الواقعية. كن واضحاً وموجزاً."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.6,
+            max_tokens=800,
+            top_p=0.9,
+            stream=False,
+            stop=None
+        )
+        
+        # Extract the summary
+        summary_text = completion.choices[0].message.content
+        
+        # Clean and format the summary
+        summary_text = summary_text.strip()
+        
+        # Format the output
+        result = {
+            'title': title,
+            'url': url,
+            'source': source,
+            'summary': summary_text,
+            'original_description': description,
+            'is_free': True,
+            'license': license_info
+        }
+        
+        logger.info(f"✅ Summarized: {title[:50]}...")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"❌ Error summarizing news: {e}")
+        
+        # Return original news if summarization fails
+        return {
+            'title': news_item.get('title', ''),
+            'url': news_item.get('url', ''),
+            'source': news_item.get('source', ''),
+            'summary': f" {news_item.get('description', '')}\n\n⚠️ لم يتم توليد وصف تفصيلي",
+            'original_description': news_item.get('description', ''),
+            'is_free': True,
+            'license': news_item.get('license', 'مفتوح المصدر')
+        }       # Call Groq API
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
