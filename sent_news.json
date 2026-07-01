@@ -13,8 +13,13 @@
     "https://openai.com/index/how-chatgpt-adoption-has-expanded",
     "https://openai.com/index/introducing-genebench-pro",
     "https://blog.google/company-news/inside-google/around-the-globe/google-europe/united-kingdom/unlocking-britains-next-era-of-productivity-building-a-nation-of-ai-trailblazers/",
-    "https://blog.google/innovation-and-ai/technology/ai/full-stack-ai-explainer/"
+    "https://blog.google/innovation-and-ai/technology/ai/full-stack-ai-explainer/",
+    "https://huggingface.co/fpadovani/rus-cyrl-100mb-ppt-shuff-dyck-100mb_seed10",
+    "https://huggingface.co/liangwc25/lora-lora10",
+    "https://huggingface.co/WendyHui/food-waste-llama3-merged",
+    "https://huggingface.co/sundaycoil/note-taking-app",
+    "https://huggingface.co/ParallaxFx343/pickle-scanner-bypass-marshal-poc"
   ],
-  "last_run": "2026-07-01T00:46:49.590522",
-  "total_sent": 14
+  "last_run": "2026-07-01T01:05:20.565899",
+  "total_sent": 19
 }
