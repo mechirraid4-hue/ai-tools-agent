@@ -1,5 +1,20 @@
 {
-  "sent_urls": [],
-  "last_run": null,
-  "total_sent": 0
+  "sent_urls": [
+    "https://github.com/tangyudi/Ai-Learn",
+    "https://github.com/KalyanM45/AI-Project-Gallery",
+    "https://github.com/louisfb01/start-machine-learning",
+    "https://github.com/py-why/EconML",
+    "https://github.com/TarrySingh/Artificial-Intelligence-Deep-Learning-Machine-Learning-Tutorials",
+    "https://huggingface.co/Miiche/visualrl-lora-min-only",
+    "https://huggingface.co/Miiche/visualrl-lora-m2-only",
+    "https://huggingface.co/asfafaf4546/MyAwesomeModel-TestRepo",
+    "https://huggingface.co/pre63/entropy-trpo-weights",
+    "https://huggingface.co/yunjae-won/qwen4b_noclip_default_KLeff_smooth_gamma1e-6_ReWeight_adaKL_reg2_step150",
+    "https://openai.com/index/how-chatgpt-adoption-has-expanded",
+    "https://openai.com/index/introducing-genebench-pro",
+    "https://blog.google/company-news/inside-google/around-the-globe/google-europe/united-kingdom/unlocking-britains-next-era-of-productivity-building-a-nation-of-ai-trailblazers/",
+    "https://blog.google/innovation-and-ai/technology/ai/full-stack-ai-explainer/"
+  ],
+  "last_run": "2026-07-01T00:46:49.590522",
+  "total_sent": 14
 }
