@@ -13,7 +13,6 @@ def scrape_github_trending():
     try:
         logger.info("🔍 Scraping GitHub Trending (FREE tools only)...")
         
-        # GitHub Search for FREE open-source AI tools with specific licenses
         url = "https://api.github.com/search/repositories"
         params = {
             'q': 'artificial intelligence OR machine learning OR deep learning OR neural-network OR ai-tools license:mit OR license:apache-2.0 OR license:bsd-3-clause OR license:gpl-3.0',
@@ -28,13 +27,23 @@ def scrape_github_trending():
         data = response.json()
         
         for repo in data.get('items', [])[:8]:
-            # Check if it's truly free (open source)
             license_info = repo.get('license', {})
             license_key = license_info.get('key', '') if license_info else ''
             license_name = license_info.get('name', 'Open Source') if license_info else 'Open Source'
             
-            # Only include if it has a free license
+            if not repo.get('description'):
+                continue
+                
             free_licenses = ['mit', 'apache-2.0', 'bsd-3-clause', 'bsd-2-clause', 'gpl-3.0', 'lgpl-3.0', 'unlicense', 'wtfpl']
+            
+            if license_key in free_licenses or not license_key:
+                news_items.append({
+                    'title': repo['full_name'],
+                    'description': repo['description'],
+                    'url': repo['html_url'],
+                    'source': 'GitHub (' + license_name + ')',
+                    'published': repo['created_at'],
+                    'stars            free_licenses = ['mit', 'apache-2.0', 'bsd-3-clause', 'bsd-2-clause', 'gpl-3.0', 'lgpl-3.0', 'unlicense', 'wtfpl']
             
             # Skip if it's not a free license or has no description
             if not repo.get('description'):
