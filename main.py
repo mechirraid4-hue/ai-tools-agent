@@ -1,89 +1,68 @@
 import os
-import sys
 import logging
+import json
 from datetime import datetime
+from scraper import scrape_all_sources
+from summarizer import summarize_news
+from notifier import send_to_telegram
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-def main():
-    """Main function to run the AI tools discovery agent"""
-    logger.info("=" * 60)
-    logger.info("🚀 Starting AI Tools Discovery Agent")
-    logger.info(f"📅 Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    logger.info("=" * 60)
-    
+def load_sent_news():
     try:
-        # Import modules
-        from scraper import scrape_all_sources
-        from summarizer import summarize_news
-        from notifier import send_to_telegram
-        from database import Database
+        with open('sent_news.json', 'r') as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_sent_news(sent_data):
+    with open('sent_news.json', 'w') as f:
+        json.dump(sent_data, f, indent=2)
+
+def main():
+    logger.info("🚀 Starting AI Tools Agent...")
+    
+    news_items = scrape_all_sources()
+    logger.info(f"📰 Found {len(news_items)} tools")
+    
+    if not news_items:
+        logger.warning("⚠️ No tools found. Exiting.")
+        return
+    
+    sent_news = load_sent_news()
+    
+    sent_count = 0
+    for item in news_items:
+        url = item.get('url', '')
         
-        # Initialize database
-        db = Database()
-        logger.info("✅ Database initialized")
+        if url in sent_news:
+            logger.info(f"⏭️ Already sent: {item.get('title', '')}")
+            continue
         
-        # Step 1: Scrape news from all sources
-        logger.info("\n📡 Step 1: Scraping news from sources...")
-        raw_news = scrape_all_sources()
-        logger.info(f"✅ Found {len(raw_news)} news items")
+        logger.info(f"🔄 Processing: {item.get('title', '')}")
         
-        if not raw_news:
-            logger.info("⚠️ No new news found. Exiting.")
-            return
+        summary_data = summarize_news(item)
         
-        # Step 2: Filter out already sent news
-        logger.info("\n🔍 Step 2: Filtering already sent news...")
-        new_news = []
-        for news in raw_news:
-            if not db.is_sent(news['url']):
-                new_news.append(news)
+        success = send_to_telegram(summary_data)
         
-        logger.info(f"✅ {len(new_news)} new items to process")
-        
-        if not new_news:
-            logger.info("⚠️ All news already sent. Exiting.")
-            return
-        
-        # Step 3: Summarize news using AI
-        logger.info("\n🤖 Step 3: Summarizing news with AI...")
-        summarized_news = []
-        for news in new_news:
-            try:
-                summary = summarize_news(news)
-                summarized_news.append(summary)
-                logger.info(f"✅ Summarized: {news['title'][:50]}...")
-            except Exception as e:
-                logger.error(f"❌ Error summarizing {news['title']}: {e}")
-        
-        logger.info(f"✅ Summarized {len(summarized_news)} items")
-        
-        if not summarized_news:
-            logger.info("⚠️ No summaries generated. Exiting.")
-            return
-        
-        # Step 4: Send to Telegram
-        logger.info("\n📤 Step 4: Sending to Telegram...")
-        for summary in summarized_news:
-            try:
-                send_to_telegram(summary)
-                db.mark_as_sent(summary['url'])
-                logger.info(f"✅ Sent: {summary['title'][:50]}...")
-            except Exception as e:
-                logger.error(f"❌ Error sending {summary['title']}: {e}")
-        
-        logger.info("\n" + "=" * 60)
-        logger.info("🎉 Agent completed successfully!")
-        logger.info("=" * 60)
-        
-    except Exception as e:
-        logger.error(f"❌ Fatal error: {e}", exc_info=True)
-        sys.exit(1)
+        if success:
+            sent_news[url] = {
+                'title': item.get('title', ''),
+                'sent_at': datetime.now().isoformat(),
+                'source': item.get('source', '')
+            }
+            sent_count += 1
+            logger.info(f"✅ Sent: {item.get('title', '')}")
+        else:
+            logger.error(f"❌ Failed to send: {item.get('title', '')}")
+    
+    save_sent_news(sent_news)
+    
+    logger.info(f"🎉 Total sent: {sent_count}")
 
 if __name__ == "__main__":
     main()
